@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matching Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        #mi {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            margin-top: 80px;
+        }
+
+        #game {
+            width: 530px;
+            height: 530px;
+            border-radius: 10px;
+            margin: auto;
+            background: linear-gradient(160deg, #02ccba 0%, #aa7ecd 100%);
+        }
+
+        .card {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            /* 設定子元素在3d空間內 */
+            transform-style: preserve-3d;
+            position: relative;
+            /* 整張卡片的旋轉 */
+            transform: rotateY(-180deg);
+            /* 0.5秒翻轉動畫 */
+            transition: transform .5s;
+            float: left;
+            margin: 15px;
+            box-shadow: 12px 15px 20px 0 rgba(46, 61, 73, 0.5);
+        }
+
+        .front {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: absolute;
+        }
+
+        .back {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background: #333436;
+            position: absolute;
+            /* 把背面的div轉到 front後面貼齊 */
+            transform: rotateY(180deg);
+            /* 讓動畫正常，backface-visibility背面是否可視 */
+            backface-visibility: hidden;
+        }
+
+        .open {
+            transform: rotateY(0deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="mi">
+        <h2>Matching Game</h2>
+        <div id="game"></div>
+    </div>
+    <script src="jquery-3.5.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+    <script>
+        $(function () {
+            let cards = new Audio()
+            cards.src = "./Card_Game.mp3"
+            // 產生16張卡片
+            for (let i = 0; i < 16; i++) {
+                $('#game').append(`<div class="card">
+            <div class="front"></div>
+            <div class="back"></div>
+            </div>`)
+            }
+
+            // 指定數字
+            for (let i = 0; i < $(".card").length; i++) {
+                // +1是為了沒有0 卡排名稱沒有0
+                // 兩兩配對 16/2=8
+                let num = i % ($(".card").length / 2) + 1;
+                $(".card").eq(i).find(".front").css("background-image", `url(./cards/${num}-01.jpg)`)
+                // 測試用 顯示卡號
+                $(".card").eq(i).attr("data-card", num);
+            }
+
+            // $(".card").length 換幾次牌
+            for (let i = 0; i < $(".card").length; i++) {
+                // 隨機抽一張牌，移動到隨機一張牌的後面
+                let target = Math.floor(Math.random() * $(".card").length);
+                let dist = Math.floor(Math.random() * $(".card").length);
+                $(".card").eq(target).insertAfter($(".card").eq(dist));
+            }
+
+            $(".card").on('click', function () {
+                cards.play()
+                // 如果翻開的牌數量小於2 且這張牌還沒翻開
+                if ($(".open").length < 2 && !$(this).hasClass("open")) {
+                    $(this).addClass("open");
+                }
+                // 翻開兩張牌
+                if ($(".open").length == 2) {
+                    // 過一秒鐘後翻回來
+                    setTimeout(() => {
+                        $(".open").removeClass("open")
+                    }, 1000);
+                }
+
+                // 如果兩張一樣
+                if ($(".open").eq(0).find(".front").css("background-image") ==
+                    $(".open").eq(1).find(".front").css("background-image")) {
+                    $(".open").fadeTo(1000, 0).addClass("ok")
+                }
+
+                if ($(".ok").length == $(".card").length) {
+                    setTimeout(() => {
+                        Swal.fire({
+                            title: '恭喜過關',
+                            text: "要再挑戰一次嗎？",
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#333436',
+                            cancelButtonText: "取消",
+                            confirmButtonText: '好唷！再來一次'
+                        }).then((result) => {
+                            if (result.value) {
+                                window.location.reload()
+                            }
+                            else {
+
+                            }
+                        })
+                    }, 1000);
+                }
+            })
+        })
+    </script>
+</body>
+
+</html>
